@@ -1,0 +1,64 @@
+// =========================
+// Customers Report Measures
+// Table name assumed: Customers Report
+// =========================
+
+Total Sales (Customers) = SUM('Customers Report'[total_sales])
+
+Total Orders (Customers) = SUM('Customers Report'[total_orders])
+
+Total Quantity (Customers) = SUM('Customers Report'[total_quantity])
+
+Total Customers = DISTINCTCOUNT('Customers Report'[customer_key])
+
+Avg Order Value (Weighted) =
+DIVIDE(
+    SUM('Customers Report'[total_sales]),
+    SUM('Customers Report'[total_orders])
+)
+
+Avg Monthly Spend (Avg) = AVERAGE('Customers Report'[avg_monthly_spend])
+
+Avg Recency (Days) = AVERAGE('Customers Report'[recency])
+
+VIP Customers =
+CALCULATE(
+    DISTINCTCOUNT('Customers Report'[customer_key]),
+    'Customers Report'[customer_segment] = "VIP"
+)
+
+Customer Segment Share % =
+DIVIDE(
+    [Total Sales (Customers)],
+    CALCULATE([Total Sales (Customers)], ALL('Customers Report'[customer_segment]))
+)
+
+
+// =========================
+// Products Report Measures
+// Table name assumed: Products Report
+// =========================
+
+Total Sales (Products) = SUM('Products Report'[total_sales])
+
+Total Products = DISTINCTCOUNT('Products Report'[product_key])
+
+Avg Selling Price (Avg) = AVERAGE('Products Report'[avg_selling_price])
+
+Avg Monthly Revenue (Avg) = AVERAGE('Products Report'[avg_monthly_revenue])
+
+High-Performer Products =
+CALCULATE(
+    DISTINCTCOUNT('Products Report'[product_key]),
+    'Products Report'[product_segment] = "High-Performer"
+)
+
+Product Segment Share % =
+DIVIDE(
+    [Total Sales (Products)],
+    CALCULATE([Total Sales (Products)], ALL('Products Report'[product_segment]))
+)
+
+// IMPORTANT:
+// total_customers is per product and summing it will double-count overall customers.
+// Use this field for "per product" context only.

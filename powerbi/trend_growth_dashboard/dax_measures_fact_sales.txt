@@ -1,0 +1,34 @@
+// =========================
+// Core Measures (fact_sales)
+// =========================
+
+Total Revenue = SUM('fact_sales'[sales_amount])
+
+Total Orders = DISTINCTCOUNT('fact_sales'[order_id])
+
+Total Quantity = SUM('fact_sales'[quantity])
+
+Avg Order Value =
+DIVIDE([Total Revenue], [Total Orders])
+
+// =========================
+// Time Intelligence
+// =========================
+
+Monthly Revenue =
+CALCULATE(
+    [Total Revenue],
+    DATESMTD('Date'[Date])
+)
+
+MoM Growth % =
+DIVIDE(
+    [Monthly Revenue] - CALCULATE([Monthly Revenue], PREVIOUSMONTH('Date'[Date])),
+    CALCULATE([Monthly Revenue], PREVIOUSMONTH('Date'[Date]))
+)
+
+YoY Growth % =
+DIVIDE(
+    [Monthly Revenue] - CALCULATE([Monthly Revenue], SAMEPERIODLASTYEAR('Date'[Date])),
+    CALCULATE([Monthly Revenue], SAMEPERIODLASTYEAR('Date'[Date]))
+)
