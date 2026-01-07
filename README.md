@@ -11,11 +11,13 @@ The primary business focus is on **customer and product master data**, ensuring 
 
 ## Power BI Dashboard Preview (Gold Layer)
 The Gold layer produces stable, reporting-ready tables (e.g., `report_customers`, `report_products`) designed for consumption by Power BI.
-
+### Customer Master Data Dashboard
 ![Customer Master Data Dashboard](powerbi/screenshots/dashboard_customer_360.png)
 
+### Product Performance Dashboard
 ![Product Performance Dashboard](powerbi/screenshots/dashboard_product_performance.png)
 
+### Data Quality Monitoring Dashboard
 ![Data Quality Monitoring Dashboard](powerbi/screenshots/dashboard_data_quality.png)
 
 > Note: Screenshots are included as recruiter-facing evidence of reporting design. The underlying data comes from the Gold reporting outputs.
@@ -56,6 +58,8 @@ This warehouse addresses those issues by standardising, validating, and governin
 - Optimised for reporting and analytics
 - Stable schemas for downstream consumption (Power BI / Python)
 
+![Data Architecture](docs/reference/data_architecture.png)
+
 ---
 
 ## Dimensional Model
@@ -73,9 +77,10 @@ Surrogate keys are used to:
 - Store transactional or measurable business events
 - Reference customer and product dimensions via surrogate keys
 
+![Data Model](docs/reference/data_model.png)
 ---
 
-## Customer & Product Mapping
+## Customer & Product Mapping 
 
 Customer and product mapping is a core feature of this warehouse:
 - Source system identifiers are mapped to **single master records**
@@ -88,6 +93,7 @@ This approach ensures:
 - Consistent reporting across departments
 - Reduced downstream reconciliation effort
 
+#### For more technical info, click [Mapping Rules](docs/mapping_rules.md)
 ---
 
 ## Data Quality & Governance
@@ -100,6 +106,7 @@ Built-in data quality controls include:
 
 Violations are surfaced explicitly to support investigation and remediation rather than being silently ignored.
 
+#### For SQL code, click [Silver Checks](sql/warehouse/quality_check_silver.sql) & [Gold Check](sql/warehouse/quality_check_gold.sql)
 ---
 
 ## Gold Tables & Business Use
@@ -145,9 +152,7 @@ Primary focus is on operational customer and product reporting. Trend and growth
 The solution design, data relationships, and governance approach are documented using professional draw.io diagrams and reference artefacts.
 
 - 📐 **End-to-End Architecture**
-  - `docs/reference/fortis_data_architecture.drawio`
-  - `docs/reference/fortis_data_architecture.png`
-  - `docs/reference/fortis_data_architecture.pdf`
+  - `docs/reference/data_architecture.png`
 
 - 🔗 **Customer–Product–Sales Relationships**
   - `docs/reference/fortis_customer_product_sales.drawio`
