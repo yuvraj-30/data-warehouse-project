@@ -1,163 +1,143 @@
-# Fortis-Style SQL Data Warehouse Project
+# Fortis-Style SQL Data Warehouse & Analytics Project
 
 ## Overview
-This project demonstrates an end-to-end SQL data warehouse designed to support **operational reporting, master data accuracy, and business decision-making** in a fast-moving commercial environment such as Fortis.
 
-The warehouse follows a **Bronze → Silver → Gold** architecture to ensure data reliability, auditability, and clear separation between raw data ingestion and business-ready reporting tables.
+This project implements an **end-to-end data warehouse** using a **Bronze → Silver → Gold** architecture to transform raw CRM and ERP data into **business-ready datasets** for reporting and analytics.
 
-The primary business focus is on **customer and product master data**, ensuring consistent keys, clean attributes, and reliable relationships across systems.
+Key focus areas:
+- Customer and product mapping across systems  
+- Data quality and governance before reporting  
+- Reporting-ready models optimised for BI tools  
 
----
-
-## Power BI Dashboard Preview (Gold Layer)
-The Gold layer produces stable, reporting-ready tables (e.g., `report_customers`, `report_products`) designed for consumption by Power BI.
-### Customer Master Data Dashboard
-![Customer Master Data Dashboard](powerbi/screenshots/dashboard_customer_360.png)
-
-### Product Performance Dashboard
-![Product Performance Dashboard](powerbi/screenshots/dashboard_product_performance.png)
-
-### Data Quality Monitoring Dashboard
-![Data Quality Monitoring Dashboard](powerbi/screenshots/dashboard_data_quality.png)
-
-> Note: Screenshots are included as recruiter-facing evidence of reporting design. The underlying data comes from the Gold reporting outputs.
+The solution reflects how data is handled in a **commercial wholesale environment**.
 
 ---
 
-## Business Problem
-Operational businesses rely on accurate customer and product data to:
-- Maintain reliable ERP master data
-- Produce consistent reports
-- Reduce reconciliation issues across systems
-- Enable confident decision-making
+## High-Level Architecture
 
-Source systems often contain:
-- Duplicate customers or products
-- Inconsistent naming or identifiers
-- Missing or late-arriving records
+The following diagram shows the **overall system architecture**, from source systems through to reporting consumption.  
+It provides a visual summary of how data flows through the Bronze, Silver, and Gold layers.
 
-This warehouse addresses those issues by standardising, validating, and governing customer and product data before it is consumed by reporting and analytics.
+![High Level Architecture](docs/reference/data_architecture.png)
 
----
+**Architecture explanation:**
+- **Sources**: CRM and ERP data provided as CSV files  
+- **Bronze layer**: Raw ingestion with no transformations  
+- **Silver layer**: Cleansed and standardised data with business rules applied  
+- **Gold layer**: Business-ready dimensional models and reporting views  
+- **Consumption**: Power BI dashboards, ad-hoc SQL queries, and analytics  
 
-## Architecture
-
-### Bronze Layer (Raw Ingestion)
-- Stores source data **as received** from upstream systems
-- No transformations beyond basic type handling
-- Append-only with load timestamps for auditability
-
-### Silver Layer (Cleansed & Conformed)
-- Cleans and standardises raw data
-- Applies business rules and validations
-- Resolves duplicates and normalises formats
-- Prepares data for dimensional modelling
-
-### Gold Layer (Business-Ready Tables)
-- Star-schema design with fact and dimension tables
-- Optimised for reporting and analytics
-- Stable schemas for downstream consumption (Power BI / Python)
-
-![Data Architecture](docs/reference/data_architecture.png)
+This layered design ensures **traceability, data quality, and reporting confidence**.
 
 ---
 
-## Dimensional Model
+## Data Flow & Lineage
 
-### Core Dimensions
-- **dim_customer**: Master list of customers with surrogate keys
-- **dim_product**: Master list of products with standardised attributes
+The diagram below illustrates **data lineage**, showing how individual source tables move through each warehouse layer.
 
-Surrogate keys are used to:
-- Ensure consistency across systems
-- Isolate reporting from source system key changes
-- Support historical tracking
+![Data Flow](docs/reference/data_flow.png)
 
-### Fact Tables
-- Store transactional or measurable business events
-- Reference customer and product dimensions via surrogate keys
+**Key points:**
+- CRM and ERP datasets are ingested independently  
+- Each dataset is validated and standardised in the Silver layer  
+- Only validated data is promoted to the Gold layer  
+- Clear lineage simplifies debugging and data quality assurance  
 
-![Data Model](docs/reference/data_model.png)
 ---
 
-## Customer & Product Mapping 
+## Customer & Product Integration
 
-Customer and product mapping is a core feature of this warehouse:
-- Source system identifiers are mapped to **single master records**
-- Duplicate records are resolved using deterministic rules
-- Missing or invalid foreign keys are detected through data quality checks
-- Late-arriving dimension records are handled via controlled inserts
+Accurate customer and product mapping is critical for operational reporting.
 
-This approach ensures:
-- Accurate ERP master data
-- Consistent reporting across departments
-- Reduced downstream reconciliation effort
+![Data Integration](docs/reference/data_integration.png)
 
-#### For more technical info, click [Mapping Rules](docs/mapping_rules.md)
+**Integration approach:**
+- CRM provides transactional sales data and identifiers  
+- ERP enriches customer and product attributes  
+- Mapping rules resolve mismatches and ensure a single trusted view  
+
+Detailed logic is documented in:
+- [`docs/reference/mapping_rules.md`](docs/reference/mapping_rules.md)
+
 ---
 
 ## Data Quality & Governance
 
-Built-in data quality controls include:
-- Primary key uniqueness checks
-- Foreign key integrity validation
-- Mandatory field completeness checks
-- Append-only logic with load timestamps
+Data quality checks are executed **before data reaches the reporting layer**.
 
-Violations are surfaced explicitly to support investigation and remediation rather than being silently ignored.
+Implemented validations include:
+- negative quantity and sales checks  
+- invalid or zero pricing checks  
+- missing customer and product key detection  
+- referential integrity validation  
 
-#### For SQL code, click [Silver Checks](sql/warehouse/quality_check_silver.sql) & [Gold Check](sql/warehouse/quality_check_gold.sql)
----
+SQL implementations:
+- Silver layer checks: `06_quality_checks_silver.sql`  
+- Gold layer checks: `07_quality_checks_gold.sql`  
 
-## Gold Tables & Business Use
-
-Each Gold table is designed for direct business consumption:
-- **Purpose**: Operational and management reporting
-- **Consumers**: Analysts, reporting tools, dashboards (Power BI)
-- **Refresh Pattern**: Incremental append with timestamps
-- **Typical Questions Answered**:
-  - How many active customers and products do we have?
-  - Are there data quality issues impacting reporting?
-  - How do customers and products relate across transactions?
+Only validated data is exposed for reporting, ensuring **trustworthy insights**.
 
 ---
 
-## Tools & Technologies
-- SQL Server–compatible SQL
-- Relational modelling (Star Schema)
-- Data quality enforcement via SQL
+## Sales Data Mart (Gold Layer)
+
+The Gold layer is designed using **dimensional modelling principles** to support analytics and BI tools.
+
+📎 Detailed schema:
+- [`docs/reference/data_model.png`](docs/reference/data_model.png)
+
+**Characteristics:**
+- star-schema-style design  
+- customer and product dimensions  
+- central sales fact table  
+- pre-calculated business measures  
+
+This structure supports efficient Power BI reporting and SQL analysis.
 
 ---
 
-## How This Aligns With the Fortis Data Analyst Role
-This project directly demonstrates the ability to:
-- Gather and organise data from multiple systems
-- Clean and prepare data for accuracy and reliability
-- Maintain customer and product master data
-- Support operational reporting and analysis
-- Follow data quality best practices
+## Reporting & Analytics
+
+Gold-layer datasets are consumed via:
+- **Power BI dashboards** for operational reporting  
+- **Ad-hoc SQL queries** for analysis and validation  
+
+Dashboards focus on:
+- customer overview and segmentation  
+- product performance  
+- sales and order behaviour  
+- data quality transparency  
+
+Power BI assets are included under the `powerbi/` directory.
 
 ---
 
-## Next Steps
-This warehouse is designed to be consumed by analytics and reporting tools (e.g. Python, Power BI) via the Gold layer, enabling end-to-end data-driven decision support.
+## Power BI Reporting (Gold Layer Consumption)
 
+The Gold-layer datasets are consumed through **Power BI dashboards** designed for
+operational reporting and day-to-day business analysis. These dashboards demonstrate
+how cleansed, governed data is ultimately delivered to business users.
 
-## Dashboard Focus
-Primary focus is on operational customer and product reporting. Trend and growth dashboards are supplementary.
+### Customer Master Dashboard
+![Customer Master Dashboard](powerbi/screenshots/dashboard_customer_360.png)
 
+### Product Performance Dashboard
+![Product Performance Dashboard](powerbi/screenshots/dashboard_product_performance.png)
 
-## Architecture & Documentation
+### Data Quality Monitoring
+![Data Quality Dashboard](powerbi/screenshots/dashboard_data_quality.png)
 
-The solution design, data relationships, and governance approach are documented using professional draw.io diagrams and reference artefacts.
+---
 
-- 📐 **End-to-End Architecture**
-  - `docs/reference/data_architecture.png`
+## Supporting Documentation
 
-- 🔗 **Customer–Product–Sales Relationships**
-  - `docs/reference/fortis_customer_product_sales.drawio`
-  - `docs/reference/fortis_customer_product_sales.png`
-  - `docs/reference/fortis_customer_product_sales.pdf`
+Additional reference materials:
+- Naming standards: [`docs/reference/naming_conventions.md`](docs/reference/naming_conventions.md)  
+- Mapping rules: [`docs/reference/mapping_rules.md`](docs/reference/mapping_rules.md)  
+- ETL concepts (reference): [`docs/reference/ETL.png`](docs/reference/ETL.png)
 
-- 🛡 **Data Quality Summary**
-  - `docs/reference/fortis_data_quality_summary.pdf`
+These provide depth without cluttering the main narrative.
+
+---
+
+*Prepared as part of a targeted application for Fortis (Timaru, Canterbury).* 
