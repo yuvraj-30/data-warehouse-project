@@ -46,7 +46,7 @@ BEGIN
         prd_line      NVARCHAR(50)   NULL,
         prd_start_dt  DATE           NULL,
         prd_end_dt    DATE           NULL,
-        CONSTRAINT PK_silver_crm_prd_info PRIMARY KEY (prd_id, prd_key, prd_start_dt)
+        CONSTRAINT PK_silver_crm_prd_info PRIMARY KEY (prd_id, prd_key)
     );
 END;
 GO
