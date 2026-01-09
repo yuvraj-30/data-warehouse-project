@@ -154,7 +154,7 @@ how governed data is delivered to business users.
 ## How to Run the Project
 
 Full execution instructions are provided here:
-- [`RUN_ORDER.md`](RUN_ORDER.md)
+- [`RUN_ORDER.md`](run/RUN_ORDER.md)
 
 The recommended approach is a **single SQLCMD run** in SSMS that:
 - Builds all warehouse layers  
