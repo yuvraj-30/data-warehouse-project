@@ -133,7 +133,7 @@ how cleansed, governed data is ultimately delivered to business users.
 
 Additional reference materials:
 - Naming standards: [`docs/reference/naming_conventions.md`](docs/reference/naming_conventions.md)  
-- Mapping rules: [`docs/reference/mapping_rules.md`](docs/reference/mapping_rules.md)  
+- Mapping rules: [`docs/reference/mapping_rules.md`](docs/mapping_rules.md)  
 - ETL concepts (reference): [`docs/reference/ETL.png`](docs/reference/ETL.png)
 
 These provide depth without cluttering the main narrative.
