@@ -1,123 +1,60 @@
 /*
-=============================================================
-Create Database and Schemas
-=============================================================
-Script Purpose:
-    This script creates a new database named 'DataWarehouseAnalytics' after checking if it already exists. 
-    If the database exists, it is dropped and recreated. Additionally, this script creates a schema called gold
-	
+===============================================================================
+00_init_database (INTEGRATED ANALYTICS)
+===============================================================================
+Purpose:
+  Create a dedicated analytics database that CONSUMES the warehouse Gold layer.
 
-Technical Objective: Initialize the DataWarehouseAnalytics database and the Gold analytics schema for a layered (Bronze/Silver/Gold) pipeline.
-WARNING:
-    This is intended for a local/dev environment.
+Design:
+  - SAFE for reviewers: does NOT drop databases.
+  - Analytics uses views over DataWarehouse.gold.* (single source of truth).
+  - A separate schema (analytics_gold) is used to avoid confusion with DataWarehouse.gold.
 
-Safer alternative:
-    - Comment out the DROP logic and use CREATE DATABASE if it does not exist.
-    - Consider using a dedicated dev database name (e.g., DataWarehouseAnalytics_DEV).
-
-WARNING:
-    Running this script will drop the entire 'DataWarehouseAnalytics' database if it exists. 
-    All data in the database will be permanently deleted. Proceed with caution 
-    and ensure you have proper backups before running this script.
+Assumptions:
+  - Warehouse database: DataWarehouse
+  - Warehouse Gold schema: gold
+===============================================================================
 */
 
 USE master;
 GO
 
--- Drop and recreate the 'DataWarehouseAnalytics' database
-IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'DataWarehouseAnalytics')
+IF DB_ID(N'DataWarehouseAnalytics') IS NULL
 BEGIN
-    ALTER DATABASE DataWarehouseAnalytics SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE DataWarehouseAnalytics;
+    CREATE DATABASE DataWarehouseAnalytics;
 END;
-GO
-
--- Create the 'DataWarehouseAnalytics' database
-CREATE DATABASE DataWarehouseAnalytics;
 GO
 
 USE DataWarehouseAnalytics;
 GO
 
--- Create Schemas
-
-CREATE SCHEMA gold;
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = N'analytics_gold')
+    EXEC(N'CREATE SCHEMA analytics_gold');
 GO
 
-CREATE TABLE gold.dim_customers(
-	customer_key int,
-	customer_id int,
-	customer_number nvarchar(50),
-	first_name nvarchar(50),
-	last_name nvarchar(50),
-	country nvarchar(50),
-	marital_status nvarchar(50),
-	gender nvarchar(50),
-	birthdate date,
-	create_date date
-);
+-- Validate warehouse prerequisites (fail fast with clear message)
+IF DB_ID(N'DataWarehouse') IS NULL
+    THROW 50001, 'Warehouse database [DataWarehouse] not found. Run the warehouse build first.', 1;
+
+IF OBJECT_ID(N'DataWarehouse.gold.dim_customers', 'U') IS NULL
+    THROW 50002, 'Missing object [DataWarehouse].[gold].[dim_customers]. Run Gold load first.', 1;
+
+IF OBJECT_ID(N'DataWarehouse.gold.dim_products', 'U') IS NULL
+    THROW 50003, 'Missing object [DataWarehouse].[gold].[dim_products]. Run Gold load first.', 1;
+
+IF OBJECT_ID(N'DataWarehouse.gold.fact_sales', 'U') IS NULL
+    THROW 50004, 'Missing object [DataWarehouse].[gold].[fact_sales]. Run Gold load first.', 1;
 GO
 
-CREATE TABLE gold.dim_products(
-	product_key int ,
-	product_id int ,
-	product_number nvarchar(50) ,
-	product_name nvarchar(50) ,
-	category_id nvarchar(50) ,
-	category nvarchar(50) ,
-	subcategory nvarchar(50) ,
-	maintenance nvarchar(50) ,
-	cost int,
-	product_line nvarchar(50),
-	start_date date 
-);
+-- Views (always reflect latest warehouse Gold)
+CREATE OR ALTER VIEW analytics_gold.vw_dim_customers AS
+SELECT * FROM DataWarehouse.gold.dim_customers;
 GO
 
-CREATE TABLE gold.fact_sales(
-	order_number nvarchar(50),
-	product_key int,
-	customer_key int,
-	order_date date,
-	shipping_date date,
-	due_date date,
-	sales_amount int,
-	quantity tinyint,
-	price int 
-);
+CREATE OR ALTER VIEW analytics_gold.vw_dim_products AS
+SELECT * FROM DataWarehouse.gold.dim_products;
 GO
 
-TRUNCATE TABLE gold.dim_customers;
-GO
-
-BULK INSERT gold.dim_customers
-FROM 'C:\sql\sql-data-analytics-project\datasets\csv-files\gold.dim_customers.csv'
-WITH (
-	FIRSTROW = 2,
-	FIELDTERMINATOR = ',',
-	TABLOCK
-);
-GO
-
-TRUNCATE TABLE gold.dim_products;
-GO
-
-BULK INSERT gold.dim_products
-FROM 'C:\sql\sql-data-analytics-project\datasets\csv-files\gold.dim_products.csv'
-WITH (
-	FIRSTROW = 2,
-	FIELDTERMINATOR = ',',
-	TABLOCK
-);
-GO
-
-TRUNCATE TABLE gold.fact_sales;
-GO
-
-BULK INSERT gold.fact_sales
-FROM 'C:\sql\sql-data-analytics-project\datasets\csv-files\gold.fact_sales.csv'
-WITH (
-	FIRSTROW = 2,
-	FIELDTERMINATOR = ',',
-	TABLOCK
-);
+CREATE OR ALTER VIEW analytics_gold.vw_fact_sales AS
+SELECT * FROM DataWarehouse.gold.fact_sales;
 GO

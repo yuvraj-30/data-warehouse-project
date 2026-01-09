@@ -1,49 +1,57 @@
+USE DataWarehouseAnalytics;
+GO
+
 /*
 ===============================================================================
-Measures Exploration (Key Metrics)
+04_measures_exploration
 ===============================================================================
 Purpose:
-    - To calculate aggregated metrics (e.g., totals, averages) for quick insights.
-    - To identify overall trends or spot anomalies.
+  Compute core measures and sanity-check counts for sales, customers and products.
 
-SQL Functions Used:
-    - COUNT(), SUM(), AVG()
+Source:
+  analytics_gold.vw_fact_sales / vw_dim_customers / vw_dim_products
 ===============================================================================
-
-Business Question: What core measures (e.g., quantity, sales, price) exist in the sales data, and are there quality issues or outliers that could distort reporting?
 */
 
--- Find the Total Sales
-SELECT SUM(sales_amount) AS total_sales FROM gold.fact_sales
+-- Total Sales
+SELECT SUM(sales_amount) AS total_sales
+FROM analytics_gold.vw_fact_sales;
 
--- Find how many items are sold
-SELECT SUM(quantity) AS total_quantity FROM gold.fact_sales
+-- Total Quantity
+SELECT SUM(quantity) AS total_quantity
+FROM analytics_gold.vw_fact_sales;
 
--- Find the average selling price
-SELECT AVG(price) AS avg_price FROM gold.fact_sales
+-- Average Selling Price (simple mean of price column)
+SELECT AVG(price) AS avg_price
+FROM analytics_gold.vw_fact_sales;
 
--- Find the Total number of Orders
-SELECT COUNT(order_number) AS total_orders FROM gold.fact_sales
-SELECT COUNT(DISTINCT order_number) AS total_orders FROM gold.fact_sales
+-- Orders: total rows vs distinct order numbers
+SELECT COUNT_BIG(*) AS fact_rows
+FROM analytics_gold.vw_fact_sales;
 
--- Find the total number of products
-SELECT COUNT(product_name) AS total_products FROM gold.dim_products
+SELECT COUNT_BIG(DISTINCT order_number) AS distinct_orders
+FROM analytics_gold.vw_fact_sales;
 
--- Find the total number of customers
-SELECT COUNT(customer_key) AS total_customers FROM gold.dim_customers;
+-- Total Products / Customers
+SELECT COUNT_BIG(*) AS total_products
+FROM analytics_gold.vw_dim_products;
 
--- Find the total number of customers that has placed an order
-SELECT COUNT(DISTINCT customer_key) AS total_customers FROM gold.fact_sales;
+SELECT COUNT_BIG(*) AS total_customers
+FROM analytics_gold.vw_dim_customers;
 
--- Generate a Report that shows all key metrics of the business
-SELECT 'Total Sales' AS measure_name, SUM(sales_amount) AS measure_value FROM gold.fact_sales
+-- Customers with at least one order
+SELECT COUNT_BIG(DISTINCT customer_sk) AS ordering_customers
+FROM analytics_gold.vw_fact_sales;
+
+-- Consolidated KPI tile output
+SELECT 'Total Sales'        AS measure_name, CAST(SUM(sales_amount) AS DECIMAL(18,2)) AS measure_value FROM analytics_gold.vw_fact_sales
 UNION ALL
-SELECT 'Total Quantity', SUM(quantity) FROM gold.fact_sales
+SELECT 'Total Quantity',    CAST(SUM(quantity)     AS DECIMAL(18,2)) FROM analytics_gold.vw_fact_sales
 UNION ALL
-SELECT 'Average Price', AVG(price) FROM gold.fact_sales
+SELECT 'Average Price',     CAST(AVG(price)        AS DECIMAL(18,2)) FROM analytics_gold.vw_fact_sales
 UNION ALL
-SELECT 'Total Orders', COUNT(DISTINCT order_number) FROM gold.fact_sales
+SELECT 'Total Orders',      CAST(COUNT_BIG(DISTINCT order_number) AS DECIMAL(18,2)) FROM analytics_gold.vw_fact_sales
 UNION ALL
-SELECT 'Total Products', COUNT(DISTINCT product_name) FROM gold.dim_products
+SELECT 'Total Products',    CAST(COUNT_BIG(*) AS DECIMAL(18,2)) FROM analytics_gold.vw_dim_products
 UNION ALL
-SELECT 'Total Customers', COUNT(customer_key) FROM gold.dim_customers;
+SELECT 'Total Customers',   CAST(COUNT_BIG(*) AS DECIMAL(18,2)) FROM analytics_gold.vw_dim_customers;

@@ -23,6 +23,8 @@ Assumptions:
 Usage:
   EXEC bronze.proc_load_bronze @bronze_folder_path = N'C:\data\';
 */
+USE DataWarehouse;
+GO 
 
 CREATE OR ALTER PROCEDURE bronze.proc_load_bronze
     @bronze_folder_path NVARCHAR(4000)

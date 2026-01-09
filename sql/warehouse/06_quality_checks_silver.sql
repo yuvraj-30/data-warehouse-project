@@ -30,6 +30,9 @@ Usage Notes:
 -- ====================================================================
 -- Check for NULLs or Duplicates in Primary Key
 -- Expectation: No Results
+USE DataWarehouse;
+GO 
+
 SELECT 
     cst_id,
     COUNT(*) 

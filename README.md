@@ -1,122 +1,144 @@
-# Fortis-Style SQL Data Warehouse & Analytics Project
+# Fortis-Style SQL Data Warehouse & Integrated Analytics Project
 
 ## Overview
 
-This project implements an **end-to-end data warehouse** using a **Bronze → Silver → Gold** architecture to transform raw CRM and ERP data into **business-ready datasets** for reporting and analytics.
+This project implements an **end-to-end SQL Server data warehouse** using a **Bronze → Silver → Gold** architecture, followed by an **Integrated Analytics layer** that consumes the Gold datasets as a governed source of truth.
+
+The solution is designed to reflect a **real-world ERP/CRM analytics workflow** in a commercial wholesale environment, closely aligned with the responsibilities of an entry-level **Data Analyst** at Fortis.
 
 Key focus areas:
-- Customer and product mapping across systems  
-- Data quality and governance before reporting  
-- Reporting-ready models optimised for BI tools  
-
-The solution reflects how data is handled in a **commercial wholesale environment**.
+- Customer and product mapping across CRM and ERP systems  
+- Strong data quality controls before reporting  
+- Reporting-ready dimensional models optimised for SQL and Power BI  
+- Clear separation between data engineering and analytics consumption  
 
 ---
 
 ## High-Level Architecture
 
-The following diagram shows the **overall system architecture**, from source systems through to reporting consumption.  
-It provides a visual summary of how data flows through the Bronze, Silver, and Gold layers.
+The diagram below shows the **overall system architecture**, from source ingestion through to analytics and reporting consumption.
 
 ![High Level Architecture](docs/reference/data_architecture.png)
 
-**Architecture explanation:**
-- **Sources**: CRM and ERP data provided as CSV files  
-- **Bronze layer**: Raw ingestion with no transformations  
-- **Silver layer**: Cleansed and standardised data with business rules applied  
-- **Gold layer**: Business-ready dimensional models and reporting views  
-- **Consumption**: Power BI dashboards, ad-hoc SQL queries, and analytics  
+**Architecture summary:**
+- **Source systems**: CRM and ERP extracts (CSV format)  
+- **Bronze layer**: Raw data ingestion with full traceability  
+- **Silver layer**: Cleansed, standardised, and validated data  
+- **Gold layer**: Business-ready dimensional model (facts & dimensions)  
+- **Integrated Analytics**: Dedicated analytics database consuming Gold data  
+- **Consumption**: Power BI dashboards and ad-hoc SQL analysis  
 
-This layered design ensures **traceability, data quality, and reporting confidence**.
+This layered design ensures **data quality, auditability, and analytical confidence**.
 
 ---
 
 ## Data Flow & Lineage
 
-The diagram below illustrates **data lineage**, showing how individual source tables move through each warehouse layer.
+The following diagram illustrates **data lineage** across the warehouse layers.
 
 ![Data Flow](docs/reference/data_flow.png)
 
-**Key points:**
+**Key principles:**
 - CRM and ERP datasets are ingested independently  
-- Each dataset is validated and standardised in the Silver layer  
+- Data quality rules are enforced in the Silver layer  
 - Only validated data is promoted to the Gold layer  
-- Clear lineage simplifies debugging and data quality assurance  
+- Clear lineage simplifies debugging, auditing, and enhancements  
 
 ---
 
 ## Customer & Product Integration
 
-Accurate customer and product mapping is critical for operational reporting.
+Accurate customer and product mapping is essential for operational reporting and analytics.
 
 ![Data Integration](docs/reference/data_integration.png)
 
 **Integration approach:**
-- CRM provides transactional sales data and identifiers  
-- ERP enriches customer and product attributes  
-- Mapping rules resolve mismatches and ensure a single trusted view  
+- CRM provides transactional sales data  
+- ERP enriches customers and products with master data  
+- Business rules resolve mismatches and missing keys  
+- A single, trusted customer and product view is created  
 
-Detailed logic is documented in:
+Detailed mapping logic is documented here:
 - [`docs/reference/mapping_rules.md`](docs/reference/mapping_rules.md)
 
 ---
 
 ## Data Quality & Governance
 
-Data quality checks are executed **before data reaches the reporting layer**.
+Data quality checks are implemented **before reporting and analytics consumption**.
 
-Implemented validations include:
-- negative quantity and sales checks  
-- invalid or zero pricing checks  
-- missing customer and product key detection  
-- referential integrity validation  
+Examples of implemented validations:
+- Negative or zero quantities  
+- Invalid or negative pricing  
+- Missing customer or product keys  
+- Referential integrity violations  
+- Sales amount variance vs quantity × price  
 
 SQL implementations:
-- Silver layer checks: `06_quality_checks_silver.sql`  
-- Gold layer checks: `07_quality_checks_gold.sql`  
+- Silver layer checks: `sql/warehouse/06_quality_checks_silver.sql`  
+- Gold layer checks: `sql/warehouse/07_quality_checks_gold.sql`  
+- Append-only DQ history: `sql/warehouse/08_dq_report_gold.sql`  
 
-Only validated data is exposed for reporting, ensuring **trustworthy insights**.
+All checks are **non-blocking** and designed to surface issues transparently.
 
 ---
 
-## Sales Data Mart (Gold Layer)
+## Gold Layer – Sales Data Mart
 
-The Gold layer is designed using **dimensional modelling principles** to support analytics and BI tools.
+The Gold layer is modelled using **dimensional modelling best practices**.
 
 📎 Detailed schema:
 - [`docs/reference/data_model.png`](docs/reference/data_model.png)
 
 **Characteristics:**
-- star-schema-style design  
-- customer and product dimensions  
-- central sales fact table  
-- pre-calculated business measures  
+- Star-schema-style design  
+- Customer and product dimensions  
+- Central sales fact table  
+- Surrogate keys and conformed dimensions  
+- Reject handling for unmapped records  
 
-This structure supports efficient Power BI reporting and SQL analysis.
-
----
-
-## Reporting & Analytics
-
-Gold-layer datasets are consumed via:
-- **Power BI dashboards** for operational reporting  
-- **Ad-hoc SQL queries** for analysis and validation  
-
-Dashboards focus on:
-- customer overview and segmentation  
-- product performance  
-- sales and order behaviour  
-- data quality transparency  
-
-Power BI assets are included under the `powerbi/` directory.
+This structure supports both **BI tools** and **ad-hoc SQL analysis**.
 
 ---
 
-## Power BI Reporting (Gold Layer Consumption)
+## Integrated Analytics Layer
 
-The Gold-layer datasets are consumed through **Power BI dashboards** designed for
-operational reporting and day-to-day business analysis. These dashboards demonstrate
-how cleansed, governed data is ultimately delivered to business users.
+A dedicated analytics database (`DataWarehouseAnalytics`) consumes the warehouse Gold layer.
+
+**Design principles:**
+- No CSV reloads in analytics  
+- Analytics always reflect the latest Gold data  
+- Clear separation between warehouse and consumption layers  
+
+Objects created:
+- `analytics_gold.vw_dim_customers`  
+- `analytics_gold.vw_dim_products`  
+- `analytics_gold.vw_fact_sales`  
+
+These views serve as the foundation for all analytical queries and reports.
+
+---
+
+## Reporting & Analysis
+
+Analytics scripts explore and analyse sales, customers, and products, including:
+- Sales trends over time  
+- Top and bottom performing products  
+- Customer segmentation and contribution  
+- Part-to-whole and cumulative analyses  
+
+Final reporting views:
+- `report.vw_customers`  
+- `report.vw_products`  
+
+These views are designed for **Power BI consumption** and stakeholder reporting.
+
+---
+
+## Power BI Reporting (Gold Consumption)
+
+The Gold layer is consumed through **Power BI dashboards** that demonstrate
+how governed data is delivered to business users.
 
 ### Customer Master Dashboard
 ![Customer Master Dashboard](powerbi/screenshots/dashboard_customer_360.png)
@@ -129,15 +151,28 @@ how cleansed, governed data is ultimately delivered to business users.
 
 ---
 
+## How to Run the Project
+
+Full execution instructions are provided here:
+- [`RUN_ORDER.md`](RUN_ORDER.md)
+
+The recommended approach is a **single SQLCMD run** in SSMS that:
+- Builds all warehouse layers  
+- Executes ETL procedures  
+- Runs data quality checks  
+- Builds the integrated analytics layer  
+
+---
+
 ## Supporting Documentation
 
 Additional reference materials:
 - Naming standards: [`docs/reference/naming_conventions.md`](docs/reference/naming_conventions.md)  
-- Mapping rules: [`docs/reference/mapping_rules.md`](docs/mapping_rules.md)  
-- ETL concepts (reference): [`docs/reference/ETL.png`](docs/reference/ETL.png)
+- Mapping rules: [`docs/reference/mapping_rules.md`](docs/reference/mapping_rules.md)  
+- ETL concepts: [`docs/reference/ETL.png`](docs/reference/ETL.png)  
 
-These provide depth without cluttering the main narrative.
+These documents provide depth without cluttering the main narrative.
 
 ---
 
-*Prepared as part of a targeted application for Fortis (Timaru, Canterbury).* 
+*Prepared as part of a targeted application for Fortis (Timaru, Canterbury).*  

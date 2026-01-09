@@ -14,6 +14,8 @@ Design:
   - Silver tables hold cleansed data with appropriate datatypes.
   - This script is idempotent: it creates tables only if they do not exist.
 */
+USE DataWarehouse;
+GO 
 
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'silver') EXEC('CREATE SCHEMA silver');
 GO

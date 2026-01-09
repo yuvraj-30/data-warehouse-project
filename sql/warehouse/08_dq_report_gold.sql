@@ -16,6 +16,8 @@ Notes:
   - If tables are empty, percentages return 0.
 ===============================================================================
 */
+USE DataWarehouse;
+GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'gold') EXEC('CREATE SCHEMA gold');
 GO
@@ -233,8 +235,8 @@ SELECT
     'Duplicate customer_key in dim_customers',
     'WARN',
     @cust_total,
-    SUM(CAST(dup_cnt AS BIGINT)) AS rows_flagged,
-    CASE WHEN @cust_total = 0 THEN 0 ELSE CAST(100.0 * SUM(CAST(dup_cnt AS BIGINT)) / @cust_total AS DECIMAL(9,4)) END,
+    COALESCE(SUM(CAST(dup_cnt AS BIGINT)), 0) AS rows_flagged,
+    CASE WHEN @cust_total = 0 THEN 0 ELSE CAST(100.0 * COALESCE(SUM(CAST(dup_cnt AS BIGINT)), 0) / @cust_total AS DECIMAL(9,4)) END,
     'customer_key should be unique in the dimension.'
 FROM (
     SELECT (COUNT_BIG(*) - 1) AS dup_cnt
@@ -281,8 +283,8 @@ SELECT
     'Duplicate product_key in dim_products',
     'WARN',
     @prod_total,
-    SUM(CAST(dup_cnt AS BIGINT)),
-    CASE WHEN @prod_total = 0 THEN 0 ELSE CAST(100.0 * SUM(CAST(dup_cnt AS BIGINT)) / @prod_total AS DECIMAL(9,4)) END,
+    COALESCE(SUM(CAST(dup_cnt AS BIGINT)), 0),
+    CASE WHEN @prod_total = 0 THEN 0 ELSE CAST(100.0 * COALESCE(SUM(CAST(dup_cnt AS BIGINT)), 0) / @prod_total AS DECIMAL(9,4)) END,
     'product_key should be unique in the dimension.'
 FROM (
     SELECT (COUNT_BIG(*) - 1) AS dup_cnt
@@ -352,7 +354,7 @@ GROUP BY reject_reason;
 -- =========================
 
 ;WITH sales_bad AS (
-    SELECT DISTINCT fact_sales_sk
+    SELECT DISTINCT sales_sk
     FROM gold.fact_sales
     WHERE (quantity IS NOT NULL AND quantity <= 0)
        OR (price IS NOT NULL AND price < 0)

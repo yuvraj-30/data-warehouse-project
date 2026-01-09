@@ -18,11 +18,11 @@ Notes:
 
 -- ===== Database (optional) =====
 -- Uncomment and update the database name if required.
--- IF DB_ID(N'DataWarehouse') IS NULL
--- BEGIN
---     CREATE DATABASE DataWarehouse;
--- END;
--- GO
+IF DB_ID(N'DataWarehouse') IS NULL
+    BEGIN
+        CREATE DATABASE DataWarehouse;
+     END;
+ GO
 
 -- ===== Schemas =====
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'bronze') EXEC('CREATE SCHEMA bronze');

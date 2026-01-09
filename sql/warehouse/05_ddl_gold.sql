@@ -10,6 +10,8 @@ Business Objective:
     - Business keys retained for traceability and easier ad-hoc joins
 ===============================================================================
 */
+USE DataWarehouse;
+GO 
 
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'gold') EXEC('CREATE SCHEMA gold');
 GO

@@ -1,3 +1,6 @@
+USE DataWarehouseAnalytics;
+GO
+
 /*
 ===============================================================================
 Part-to-Whole Analysis
@@ -19,8 +22,8 @@ WITH category_sales AS (
     SELECT
         p.category,
         SUM(f.sales_amount) AS total_sales
-    FROM gold.fact_sales f
-    LEFT JOIN gold.dim_products p
+    FROM analytics_gold.vw_fact_sales f
+    LEFT JOIN analytics_gold.vw_dim_products p
         ON p.product_key = f.product_key
     GROUP BY p.category
 )

@@ -1,3 +1,6 @@
+USE DataWarehouseAnalytics;
+GO
+
 /*
 ===============================================================================
 Data Segmentation Analysis
@@ -27,7 +30,7 @@ WITH product_segments AS (
             WHEN cost BETWEEN 500 AND 1000 THEN '500-1000'
             ELSE 'Above 1000'
         END AS cost_range
-    FROM gold.dim_products
+    FROM analytics_gold.vw_dim_products
 )
 SELECT 
     cost_range,
@@ -49,8 +52,8 @@ WITH customer_spending AS (
         MIN(order_date) AS first_order,
         MAX(order_date) AS last_order,
         DATEDIFF(month, MIN(order_date), MAX(order_date)) AS lifespan
-    FROM gold.fact_sales f
-    LEFT JOIN gold.dim_customers c
+    FROM analytics_gold.vw_fact_sales f
+    LEFT JOIN analytics_gold.vw_dim_customers c
         ON f.customer_key = c.customer_key
     GROUP BY c.customer_key
 )

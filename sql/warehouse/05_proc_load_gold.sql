@@ -12,6 +12,8 @@ Run order:
   After Silver load and Silver quality checks.
 ===============================================================================
 */
+USE DataWarehouse;
+GO 
 
 CREATE OR ALTER PROCEDURE dbo.proc_load_gold
 AS
@@ -147,9 +149,16 @@ BEGIN
 
         SET @end_time = SYSDATETIME();
 
+        DECLARE @fact_rows   BIGINT;
+        DECLARE @reject_rows BIGINT;
+
+        SELECT @fact_rows = COUNT_BIG(*) FROM gold.fact_sales;
+        SELECT @reject_rows = COUNT_BIG(*) FROM gold.fact_sales_rejects;
+
         PRINT CONCAT('Gold load complete. Duration (sec): ', DATEDIFF(SECOND, @start_time, @end_time));
-        PRINT CONCAT('Gold fact rows: ', (SELECT COUNT(*) FROM gold.fact_sales));
-        PRINT CONCAT('Gold reject rows: ', (SELECT COUNT(*) FROM gold.fact_sales_rejects));
+        PRINT CONCAT('Gold fact rows: ', @fact_rows);
+        PRINT CONCAT('Gold reject rows: ', @reject_rows);
+
     END TRY
     BEGIN CATCH
         SET @end_time = SYSDATETIME();

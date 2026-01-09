@@ -27,6 +27,9 @@ Usage Notes:
 -- ====================================================================
 -- Check for Uniqueness of Customer Key in gold.dim_customers
 -- Expectation: No results 
+USE DataWarehouse;
+GO
+
 SELECT 
     customer_key,
     COUNT(*) AS duplicate_count

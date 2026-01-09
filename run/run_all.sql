@@ -1,51 +1,49 @@
-:setvar RootDir ".."
-:setvar SqlDir "$(RootDir)\sql"
-
--- ============================================================
--- SQL Server end-to-end run (SQLCMD Mode)
--- Instructions:
--- 1) Open this file in SSMS
--- 2) Enable SQLCMD Mode: Query > SQLCMD Mode
--- 3) Set the $(RootDir) variable if your folder structure differs
--- 4) Execute
--- ============================================================
-
 PRINT 'Starting end-to-end warehouse build...';
 
--- 0) Init database + schemas
-:r "$(SqlDir)\warehouse\00_init_database.sql"
+-- =========================
+-- 0) Create database objects
+-- =========================
+:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\00_init_database.sql"
+:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\01_ddl_bronze.sql"
+:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\02_proc_load_bronze.sql"
+:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\03_ddl_silver.sql"
+:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\04_proc_load_silver.sql"
+:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\05_ddl_gold.sql"
+:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\05_proc_load_gold.sql"
+:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\06_quality_checks_silver.sql"
+:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\07_quality_checks_gold.sql"
+:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\08_dq_report_gold.sql"
 
--- 1) Bronze (raw)
-:r "$(SqlDir)\warehouse\01_ddl_bronze.sql"
-:r "$(SqlDir)\warehouse\02_proc_load_bronze.sql"
+-- =========================
+-- 1) Execute the pipeline
+-- =========================
+PRINT 'Running pipeline procedures...';
 
--- 2) Silver (clean + standardized)
-:r "$(SqlDir)\warehouse\03_ddl_silver.sql"
-:r "$(SqlDir)\warehouse\04_proc_load_silver.sql"
-:r "$(SqlDir)\warehouse\06_quality_checks_silver.sql"
+-- Ensure we are in the correct database (consistent execution context)
+USE DataWarehouse;
+GO
 
--- 3) Gold (star schema tables)
-:r "$(SqlDir)\warehouse\05_ddl_gold.sql"
-:r "$(SqlDir)\warehouse\05_proc_load_gold.sql"
-:r "$(SqlDir)\warehouse\07_quality_checks_gold.sql"
+-- 1A) Load Bronze (CSV ingestion)
+EXEC bronze.proc_load_bronze
+    @bronze_folder_path = N'C:\DW\SQL_Warehouse_Project_Fortis_Aligned\data\bronze\';
 
--- 4) Analytics (exploration + report marts)
-:r "$(SqlDir)\analytics\00_init_database.sql"
-:r "$(SqlDir)\analytics\01_database_exploration.sql"
-:r "$(SqlDir)\analytics\02_dimensions_exploration.sql"
-:r "$(SqlDir)\analytics\03_date_range_exploration.sql"
-:r "$(SqlDir)\analytics\04_measures_exploration.sql"
-:r "$(SqlDir)\analytics\05_magnitude_analysis.sql"
-:r "$(SqlDir)\analytics\06_ranking_analysis.sql"
-:r "$(SqlDir)\analytics\07_change_over_time_analysis.sql"
-:r "$(SqlDir)\analytics\08_cumulative_analysis.sql"
-:r "$(SqlDir)\analytics\09_performance_analysis.sql"
-:r "$(SqlDir)\analytics\10_data_segmentation.sql"
-:r "$(SqlDir)\analytics\11_part_to_whole_analysis.sql"
-:r "$(SqlDir)\analytics\12_report_customers.sql"
-:r "$(SqlDir)\analytics\13_report_products.sql"
+-- 1B) Load Silver (clean + standardize)
+EXEC silver.proc_load_silver;
 
--- 5) Report-only data quality summary (append with timestamp)
-:r "$(SqlDir)\warehouse\08_dq_report_gold.sql"
+-- 1C) Load Gold (dims + fact + rejects)
+EXEC gold.proc_load_gold;
+
+-- 1D) Run DQ report (append-only)
+:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\08_dq_report_gold.sql"
+
+-- =========================
+-- 2) Quick validation output
+-- =========================
+PRINT 'Row counts (quick validation):';
+
+SELECT 'bronze.crm_sales_details' AS table_name, COUNT(*) AS rows FROM bronze.crm_sales_details
+UNION ALL SELECT 'silver.crm_sales_details', COUNT(*) FROM silver.crm_sales_details
+UNION ALL SELECT 'gold.fact_sales', COUNT(*) FROM gold.fact_sales
+UNION ALL SELECT 'gold.fact_sales_rejects', COUNT(*) FROM gold.fact_sales_rejects;
 
 PRINT 'All done.';

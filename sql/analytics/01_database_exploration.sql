@@ -1,32 +1,44 @@
+USE DataWarehouseAnalytics;
+GO
+
 /*
 ===============================================================================
-Database Exploration
+01_database_exploration
 ===============================================================================
 Purpose:
-    - To explore the structure of the database, including the list of tables and their schemas.
-    - To inspect the columns and metadata for specific tables.
+  Quick discovery of tables/views and their columns for the Analytics database.
 
-
-Business Question: What tables and schemas exist, and how are they structured to support customer/product master data and sales reporting?
-Table Used:
-    - INFORMATION_SCHEMA.TABLES
-    - INFORMATION_SCHEMA.COLUMNS
+Notes:
+  - Uses SYS catalog views (preferred over INFORMATION_SCHEMA for SQL Server specifics).
 ===============================================================================
 */
 
--- Retrieve a list of all tables in the database
-SELECT 
-    TABLE_CATALOG, 
-    TABLE_SCHEMA, 
-    TABLE_NAME, 
-    TABLE_TYPE
-FROM INFORMATION_SCHEMA.TABLES;
+-- List user tables and views
+SELECT
+    s.name  AS [schema_name],
+    o.name  AS [object_name],
+    o.type_desc
+FROM sys.objects o
+JOIN sys.schemas s ON s.schema_id = o.schema_id
+WHERE o.type IN ('U','V')
+ORDER BY s.name, o.name;
 
--- Retrieve all columns for a specific table (dim_customers)
-SELECT 
-    COLUMN_NAME, 
-    DATA_TYPE, 
-    IS_NULLABLE, 
-    CHARACTER_MAXIMUM_LENGTH
-FROM INFORMATION_SCHEMA.COLUMNS
-WHERE TABLE_NAME = 'dim_customers';
+-- Column metadata for a given object (edit the name as needed)
+DECLARE @schema SYSNAME = N'analytics_gold';
+DECLARE @object SYSNAME = N'vw_dim_customers';
+
+SELECT
+    c.column_id,
+    c.name AS column_name,
+    t.name AS data_type,
+    c.max_length,
+    c.precision,
+    c.scale,
+    c.is_nullable
+FROM sys.columns c
+JOIN sys.objects o ON o.object_id = c.object_id
+JOIN sys.schemas s ON s.schema_id = o.schema_id
+JOIN sys.types t   ON t.user_type_id = c.user_type_id
+WHERE s.name = @schema
+  AND o.name = @object
+ORDER BY c.column_id;

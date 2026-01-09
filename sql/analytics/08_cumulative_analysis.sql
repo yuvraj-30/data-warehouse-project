@@ -1,33 +1,31 @@
+USE DataWarehouseAnalytics;
+GO
+
 /*
 ===============================================================================
-Cumulative Analysis
+08_cumulative_analysis
 ===============================================================================
 Purpose:
-    - To calculate running totals or moving averages for key metrics.
-    - To track performance over time cumulatively.
-    - Useful for growth analysis or identifying long-term trends.
+  Running totals and moving averages over time.
 
-SQL Functions Used:
-    - Window Functions: SUM() OVER(), AVG() OVER()
+Design:
+  - Monthly aggregation using DATEFROMPARTS (SQL Server 2012+).
 ===============================================================================
-
-Business Question: How does cumulative performance (MTD/QTD/YTD) progress over time, and where are we ahead or behind prior periods?
 */
 
--- Calculate the total sales per month 
--- and the running total of sales over time 
-SELECT
-	order_date,
-	total_sales,
-	SUM(total_sales) OVER (ORDER BY order_date) AS running_total_sales,
-	AVG(avg_price) OVER (ORDER BY order_date) AS moving_average_price
-FROM
-(
-    SELECT 
-        DATETRUNC(year, order_date) AS order_date,
-        SUM(sales_amount) AS total_sales,
-        AVG(price) AS avg_price
-    FROM gold.fact_sales
+WITH monthly AS (
+    SELECT
+        DATEFROMPARTS(YEAR(order_date), MONTH(order_date), 1) AS month_start,
+        SUM(CAST(sales_amount AS DECIMAL(18,2))) AS total_sales,
+        AVG(CAST(price AS DECIMAL(18,2)))        AS avg_price
+    FROM analytics_gold.vw_fact_sales
     WHERE order_date IS NOT NULL
-    GROUP BY DATETRUNC(year, order_date)
-) t
+    GROUP BY DATEFROMPARTS(YEAR(order_date), MONTH(order_date), 1)
+)
+SELECT
+    month_start,
+    total_sales,
+    SUM(total_sales) OVER (ORDER BY month_start) AS running_total_sales,
+    AVG(avg_price)  OVER (ORDER BY month_start)  AS moving_average_price
+FROM monthly
+ORDER BY month_start;

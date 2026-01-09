@@ -15,6 +15,8 @@ Design:
   - Use NVARCHAR for most columns to avoid load failures from dirty data.
   - Type casting and standardization happens in the SILVER layer.
 */
+USE DataWarehouse;
+GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'bronze') EXEC('CREATE SCHEMA bronze');
 GO

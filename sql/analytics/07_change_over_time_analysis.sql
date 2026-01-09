@@ -1,51 +1,26 @@
+USE DataWarehouseAnalytics;
+GO
+
 /*
 ===============================================================================
-Change Over Time Analysis
+07_change_over_time_analysis
 ===============================================================================
 Purpose:
-    - To track trends, growth, and changes in key metrics over time.
-    - For time-series analysis and identifying seasonality.
-    - To measure growth or decline over specific periods.
+  Trend analysis over time (monthly rollups).
 
-SQL Functions Used:
-    - Date Functions: DATEPART(), DATETRUNC(), FORMAT()
-    - Aggregate Functions: SUM(), COUNT(), AVG()
+Industry notes:
+  - Uses DATEFROMPARTS for month bucketing (compatible with SQL Server 2012+).
+  - Avoids FORMAT() for grouping/sorting performance reasons.
 ===============================================================================
-
-Business Question: How do sales, volume, and customer activity change over time (MoM/YoY), and what trends should stakeholders act on?
 */
 
--- Analyse sales performance over time
--- Quick Date Functions
+-- Monthly sales, customers and quantity
 SELECT
-    YEAR(order_date) AS order_year,
-    MONTH(order_date) AS order_month,
+    DATEFROMPARTS(YEAR(order_date), MONTH(order_date), 1) AS month_start,
     SUM(sales_amount) AS total_sales,
     COUNT(DISTINCT customer_key) AS total_customers,
     SUM(quantity) AS total_quantity
-FROM gold.fact_sales
+FROM analytics_gold.vw_fact_sales
 WHERE order_date IS NOT NULL
-GROUP BY YEAR(order_date), MONTH(order_date)
-ORDER BY YEAR(order_date), MONTH(order_date);
-
--- DATETRUNC()
-SELECT
-    DATETRUNC(month, order_date) AS order_date,
-    SUM(sales_amount) AS total_sales,
-    COUNT(DISTINCT customer_key) AS total_customers,
-    SUM(quantity) AS total_quantity
-FROM gold.fact_sales
-WHERE order_date IS NOT NULL
-GROUP BY DATETRUNC(month, order_date)
-ORDER BY DATETRUNC(month, order_date);
-
--- FORMAT()
-SELECT
-    FORMAT(order_date, 'yyyy-MMM') AS order_date,
-    SUM(sales_amount) AS total_sales,
-    COUNT(DISTINCT customer_key) AS total_customers,
-    SUM(quantity) AS total_quantity
-FROM gold.fact_sales
-WHERE order_date IS NOT NULL
-GROUP BY FORMAT(order_date, 'yyyy-MMM')
-ORDER BY FORMAT(order_date, 'yyyy-MMM');
+GROUP BY DATEFROMPARTS(YEAR(order_date), MONTH(order_date), 1)
+ORDER BY month_start;

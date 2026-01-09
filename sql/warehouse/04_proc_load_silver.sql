@@ -13,6 +13,8 @@ Purpose:
 Usage:
   EXEC silver.proc_load_silver;
 */
+USE DataWarehouse;
+GO 
 
 CREATE OR ALTER PROCEDURE silver.proc_load_silver
 AS
@@ -151,17 +153,7 @@ BEGIN
         SELECT
             NULLIF(LTRIM(RTRIM(sls_ord_num)), '') AS sls_ord_num,
                         -- align with product key parsing (drops first 2 segments, e.g., CO-RF-FR-R92B-58 -> FR-R92B-58)
-            CASE
-                WHEN sls_prd_key IS NULL THEN NULL
-                WHEN CHARINDEX('-', LTRIM(RTRIM(sls_prd_key))) = 0 THEN NULLIF(LTRIM(RTRIM(sls_prd_key)), '')
-                WHEN CHARINDEX('-', LTRIM(RTRIM(sls_prd_key)), CHARINDEX('-', LTRIM(RTRIM(sls_prd_key))) + 1) = 0
-                    THEN RIGHT(LTRIM(RTRIM(sls_prd_key)), LEN(LTRIM(RTRIM(sls_prd_key))) - CHARINDEX('-', LTRIM(RTRIM(sls_prd_key))))
-                ELSE SUBSTRING(
-                    LTRIM(RTRIM(sls_prd_key)),
-                    CHARINDEX('-', LTRIM(RTRIM(sls_prd_key)), CHARINDEX('-', LTRIM(RTRIM(sls_prd_key))) + 1) + 1,
-                    8000
-                )
-            END AS sls_prd_key,
+            NULLIF(LTRIM(RTRIM(sls_prd_key)), '') AS sls_prd_key,
             TRY_CONVERT(INT, NULLIF(LTRIM(RTRIM(sls_cust_id)), '')) AS sls_cust_id,
             TRY_CONVERT(DATE, NULLIF(LTRIM(RTRIM(sls_order_dt)), '')) AS sls_order_dt,
             TRY_CONVERT(DATE, NULLIF(LTRIM(RTRIM(sls_ship_dt)), '')) AS sls_ship_dt,
@@ -177,9 +169,19 @@ BEGIN
 
         INSERT INTO silver.erp_cust_az12 (cid, bdate, gen)
         SELECT
-            NULLIF(LTRIM(RTRIM(cid)), '') AS cid,
-            TRY_CONVERT(DATE, NULLIF(LTRIM(RTRIM(bdate)), '')) AS bdate,
-            NULLIF(LTRIM(RTRIM(gen)), '') AS gen
+			CASE
+				WHEN cid LIKE 'NAS%' THEN SUBSTRING(cid, 4, LEN(cid)) -- Remove 'NAS' prefix if present
+				ELSE cid
+			END AS cid, 
+			CASE
+				WHEN bdate > GETDATE() THEN NULL
+				ELSE bdate
+			END AS bdate, -- Set future birthdates to NULL
+			CASE
+				WHEN UPPER(TRIM(gen)) IN ('F', 'FEMALE') THEN 'Female'
+				WHEN UPPER(TRIM(gen)) IN ('M', 'MALE') THEN 'Male'
+				ELSE 'n/a'
+			END AS gen -- Normalize gender values and handle unknown cases
         FROM bronze.erp_cust_az12;
 
         -- ===== ERP location =====
@@ -187,8 +189,13 @@ BEGIN
 
         INSERT INTO silver.erp_loc_a101 (cid, cntry)
         SELECT
-            NULLIF(LTRIM(RTRIM(cid)), '') AS cid,
-            NULLIF(LTRIM(RTRIM(cntry)), '') AS cntry
+			REPLACE(cid, '-', '') AS cid, 
+			CASE
+				WHEN TRIM(cntry) = 'DE' THEN 'Germany'
+				WHEN TRIM(cntry) IN ('US', 'USA') THEN 'United States'
+				WHEN TRIM(cntry) = '' OR cntry IS NULL THEN 'n/a'
+				ELSE TRIM(cntry)
+			END AS cntry -- Normalize and Handle missing or blank country codes
         FROM bronze.erp_loc_a101;
 
         -- ===== ERP product categories =====
