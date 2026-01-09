@@ -59,7 +59,7 @@ Accurate customer and product mapping is essential for operational reporting and
 - A single, trusted customer and product view is created  
 
 Detailed mapping logic is documented here:
-- [`docs/reference/mapping_rules.md`](docs/reference/mapping_rules.md)
+- [`docs/mapping_rules.md`](docs/mapping_rules.md)
 
 ---
 
@@ -168,7 +168,7 @@ The recommended approach is a **single SQLCMD run** in SSMS that:
 
 Additional reference materials:
 - Naming standards: [`docs/reference/naming_conventions.md`](docs/reference/naming_conventions.md)  
-- Mapping rules: [`docs/reference/mapping_rules.md`](docs/reference/mapping_rules.md)  
+- Mapping rules: [`docs/mapping_rules.md`](docs/mapping_rules.md)  
 - ETL concepts: [`docs/reference/ETL.png`](docs/reference/ETL.png)  
 
 These documents provide depth without cluttering the main narrative.
