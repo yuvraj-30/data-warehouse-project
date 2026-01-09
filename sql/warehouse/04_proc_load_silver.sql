@@ -160,7 +160,12 @@ BEGIN
             TRY_CONVERT(DATE, NULLIF(LTRIM(RTRIM(sls_due_dt)), ''))  AS sls_due_dt,
             TRY_CONVERT(DECIMAL(18,2), NULLIF(LTRIM(RTRIM(sls_sales)), '')) AS sls_sales,
             TRY_CONVERT(INT, NULLIF(LTRIM(RTRIM(sls_quantity)), '')) AS sls_quantity,
-            TRY_CONVERT(DECIMAL(18,2), NULLIF(LTRIM(RTRIM(sls_price)), '')) AS sls_price
+            CASE
+                WHEN TRY_CONVERT(DECIMAL(18,2), NULLIF(LTRIM(RTRIM(REPLACE(REPLACE(REPLACE(sls_price, CHAR(13), ''), CHAR(10), ''), CHAR(160), ''))), '')) IS NOT NULL THEN TRY_CONVERT(DECIMAL(18,2), NULLIF(LTRIM(RTRIM(REPLACE(REPLACE(REPLACE(sls_price, CHAR(13), ''), CHAR(10), ''), CHAR(160), ''))), ''))
+                WHEN TRY_CONVERT(DECIMAL(18,2), NULLIF(LTRIM(RTRIM(sls_sales)), '')) IS NOT NULL AND TRY_CONVERT(INT, NULLIF(LTRIM(RTRIM(sls_quantity)), '')) IS NOT NULL AND TRY_CONVERT(INT, NULLIF(LTRIM(RTRIM(sls_quantity)), '')) <> 0
+                    THEN TRY_CONVERT(DECIMAL(18,2), NULLIF(LTRIM(RTRIM(sls_sales)), '')) / TRY_CONVERT(INT, NULLIF(LTRIM(RTRIM(sls_quantity)), ''))
+                ELSE NULL
+            END AS sls_price          
         FROM bronze.crm_sales_details
         WHERE NULLIF(LTRIM(RTRIM(sls_ord_num)), '') IS NOT NULL;
 
