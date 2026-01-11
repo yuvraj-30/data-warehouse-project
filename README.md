@@ -1,4 +1,4 @@
-# Fortis-Style SQL Data Warehouse & Integrated Analytics Project
+# SQL Data Warehouse & Integrated Analytics Project
 
 ## Overview
 
