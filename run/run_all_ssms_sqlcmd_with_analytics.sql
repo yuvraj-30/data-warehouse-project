@@ -7,7 +7,7 @@
 -- 3) Execute
 --
 -- Assumption (edit if needed):
---   Project root extracted to: C:\DW\SQL_Warehouse_Project_Fortis_Aligned
+--   Project root extracted to: C:\DW\SQL_Warehouse_Project
 -- ============================================================
 
 PRINT 'Starting end-to-end build (Warehouse + Integrated Analytics)...';
@@ -15,15 +15,15 @@ PRINT 'Starting end-to-end build (Warehouse + Integrated Analytics)...';
 -- =========================
 -- 0) WAREHOUSE: create objects
 -- =========================
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\00_init_database.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\01_ddl_bronze.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\02_proc_load_bronze.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\03_ddl_silver.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\04_proc_load_silver.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\05_ddl_gold.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\05_proc_load_gold.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\06_quality_checks_silver.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\07_quality_checks_gold.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\warehouse\00_init_database.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\warehouse\01_ddl_bronze.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\warehouse\02_proc_load_bronze.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\warehouse\03_ddl_silver.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\warehouse\04_proc_load_silver.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\warehouse\05_ddl_gold.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\warehouse\05_proc_load_gold.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\warehouse\06_quality_checks_silver.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\warehouse\07_quality_checks_gold.sql"
 
 -- =========================
 -- 1) WAREHOUSE: execute pipeline
@@ -35,7 +35,7 @@ GO
 
 -- 1A) Bronze load (CSV ingestion)
 EXEC bronze.proc_load_bronze
-    @bronze_folder_path = N'C:\DW\SQL_Warehouse_Project_Fortis_Aligned\data\bronze\';
+    @bronze_folder_path = N'C:\DW\SQL_Warehouse_Project\data\bronze\';
 
 -- 1B) Silver load (clean + standardize)
 EXEC silver.proc_load_silver;
@@ -44,7 +44,7 @@ EXEC silver.proc_load_silver;
 EXEC gold.proc_load_gold;
 
 -- 1D) Gold DQ report (append-only, report-only)
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\warehouse\08_dq_report_gold.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\warehouse\08_dq_report_gold.sql"
 
 -- Quick validation (row counts)
 PRINT 'Warehouse row counts (quick validation):';
@@ -59,20 +59,20 @@ UNION ALL SELECT 'gold.fact_sales_rejects', COUNT(*) FROM gold.fact_sales_reject
 -- =========================
 PRINT 'Starting Integrated Analytics (consuming DataWarehouse.gold.*)...';
 
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\00_init_database.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\01_database_exploration.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\02_dimensions_exploration.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\03_date_range_exploration.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\04_measures_exploration.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\05_magnitude_analysis.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\06_ranking_analysis.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\07_change_over_time_analysis.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\08_cumulative_analysis.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\09_performance_analysis.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\10_data_segmentation.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\11_part_to_whole_analysis.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\12_report_customers.sql"
-:r "C:\DW\SQL_Warehouse_Project_Fortis_Aligned\sql\analytics\13_report_products.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\00_init_database.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\01_database_exploration.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\02_dimensions_exploration.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\03_date_range_exploration.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\04_measures_exploration.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\05_magnitude_analysis.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\06_ranking_analysis.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\07_change_over_time_analysis.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\08_cumulative_analysis.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\09_performance_analysis.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\10_data_segmentation.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\11_part_to_whole_analysis.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\12_report_customers.sql"
+:r "C:\DW\SQL_Warehouse_Project\sql\analytics\13_report_products.sql"
 
 -- Quick validation (analytics views)
 USE DataWarehouseAnalytics;
