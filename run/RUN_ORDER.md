@@ -15,7 +15,7 @@ This option builds **all objects** and **executes the full pipeline**, including
 - SQL Server Management Studio (SSMS)
 - Project extracted to:
   ```
-  C:\DW\SQL_Warehouse_Project_Fortis_Aligned
+  C:\DW\SQL_Warehouse_Project
   ```
 
 ### Steps
@@ -57,7 +57,7 @@ sql/warehouse/02_proc_load_bronze.sql
 Execute:
 ```sql
 EXEC bronze.proc_load_bronze
-    @bronze_folder_path = N'C:\DW\SQL_Warehouse_Project_Fortis_Aligned\data\bronze\';
+    @bronze_folder_path = N'C:\DW\SQL_Warehouse_Project\data\bronze\';
 ```
 
 ### 2) Silver layer – cleaning & standardisation
